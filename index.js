@@ -22,13 +22,15 @@ export function fn(func, data = {}) {
     const funcName = func.name || data.fn || "(fn)fallbackFunctionName"
 
     for (const key in data) 
-        for (const sym of Object.getOwnPropertySymbols(data[key]))
-            symbols[sym] = Executables[sym](
-                uncapitalize(key), 
-                defaults, 
-                data[key][sym], 
-                symbols[sym]
-            )
+        if(data[key])
+            for (const sym of Object.getOwnPropertySymbols(data[key]))
+                if(typeof Executables[sym] == "function")
+                    symbols[sym] = Executables[sym](
+                        uncapitalize(key), 
+                        defaults, 
+                        data[key][sym], 
+                        symbols[sym]
+                    )
     
     // your input function is decorated so that it has a new name, default values, or other custom types.
     return (

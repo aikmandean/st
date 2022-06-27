@@ -50,7 +50,7 @@ export function fn<
 
 export function defineProp<T>(defaultValue: T, metaData?: {}): T
 
-export function implementKeyword<
+export function TypeDefinition<
   GCtor extends (...a: any[]) => unknown, 
   GCsum extends (key: symbol, defaults: {[x:symbol]: unknown}, metadata: ReturnType<GCtor>, existing: ReturnType<GCsum>) => unknown
 >(constructor: GCtor, consumer: GCsum, description: string): GCtor
