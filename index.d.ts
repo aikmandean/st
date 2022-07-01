@@ -12,10 +12,14 @@ type SimplifyContext<UnkCtx> =
             ? {} 
             : P
           : K extends string 
-            ? { [LK in Uncapitalize<K>]: UnkCtx[K] } 
+            ? UnkCtx[K] extends IsOptional 
+                ? { [LK in Uncapitalize<K>]?: UnkCtx[K] } 
+                : { [LK in Uncapitalize<K>]: UnkCtx[K] } 
             : never 
         : K extends string 
-          ? { [LK in Uncapitalize<K>]: UnkCtx[K] } 
+            ? UnkCtx[K] extends IsOptional 
+                ? { [LK in Uncapitalize<K>]?: UnkCtx[K] } 
+                : { [LK in Uncapitalize<K>]: UnkCtx[K] } 
           : never 
     }[keyof UnkCtx]
   >
@@ -24,6 +28,7 @@ type ExcludeContext<Ctx, EclCtx> =
     EclCtx extends {} ? Omit<Ctx, Uncapitalize<keyof EclCtx>> : Ctx
 
 type Composable = {[s:symbol]: "Composable"}
+type IsOptional = {[s:symbol]: "Optional"}
 
 /**
  * A function that takes a defining function then its 
@@ -40,7 +45,7 @@ type Composable = {[s:symbol]: "Composable"}
  * the name will be "Uncapitalized". Props will 
  * be added to prop requirements in groups using a symbol key.
  */
-export function fn<
+declare function fn<
   GUnknownContext,
   GFunction extends (props: GSimplifiedContext, identicalProps: GSimplifiedContext) => unknown,
   GExclusionContext extends {},
@@ -48,9 +53,9 @@ export function fn<
 >(func: GFunction, context: GUnknownContext, exclusionContext?: GExclusionContext): 
   Composable & ((props: GSimplifiedContext) => ReturnType<GFunction>)
 
-export function defineProp<T>(defaultValue: T, metaData?: {}): T
+declare function defineProp<T,M extends {}>(defaultValue: T, metaData?: M): M extends { default: boolean } ? T & IsOptional : T
 
-export function TypeDefinition<
+declare function TypeDefinition<
   GCtor extends (...a: any[]) => unknown, 
   GCsum extends (key: symbol, defaults: {[x:symbol]: unknown}, metadata: ReturnType<GCtor>, existing: ReturnType<GCsum>) => unknown
 >(constructor: GCtor, consumer: GCsum, description: string): GCtor
