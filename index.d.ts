@@ -30,6 +30,12 @@ type ExcludeContext<Ctx, EclCtx> =
 type Composable = {[s:symbol]: "Composable"}
 type IsOptional = {[s:symbol]: "Optional"}
 
+type Is<T, M> = T extends {[s:symbol]: infer MVal} 
+  ? MVal extends M 
+    ? true 
+    : false 
+  : false
+
 /**
  * A function that takes a defining function then its 
  * prop requirements. It returns the defining function 
