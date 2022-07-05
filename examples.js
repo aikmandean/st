@@ -27,7 +27,6 @@
     const Name = defineProp("")
 
     const printName = fn(props => {
-        return props.name
     }, { Name })
 
     const printInfo = fn(props => {
