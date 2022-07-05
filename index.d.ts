@@ -61,9 +61,10 @@ type HasFallback<T> = Is<T, TagFallback>
  */
 declare function fn<
   GUnknownContext,
-  GFunction extends (props: GSimplifiedContext, identicalProps: GSimplifiedContext) => unknown,
+  GFunction extends (props: GFallbackContext, identicalProps: GFallbackContext) => unknown,
   GExclusionContext extends {},
   GSimplifiedContext extends ExcludeContext<SimplifyContext<GUnknownContext>, GExclusionContext>,
+  GFallbackContext extends Required<GSimplifiedContext>,
 >(func: GFunction, context: GUnknownContext, exclusionContext?: GExclusionContext): 
   DeclareComposable & ((props: GSimplifiedContext) => ReturnType<GFunction>)
 
