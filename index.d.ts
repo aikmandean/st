@@ -6,18 +6,18 @@ type UnionToIntersection<T> =
 type SimplifyContext<UnkCtx> = 
   UnionToIntersection<
     { [K in keyof UnkCtx]: 
-      UnkCtx[K] extends Composable 
+      UnkCtx[K] extends IsComposable<UnkCtx[K]> 
         ? UnkCtx[K] extends ((p: infer P) => any)
           ? P extends never 
             ? {} 
             : P
           : K extends string 
-            ? UnkCtx[K] extends IsOptional 
+            ? UnkCtx[K] extends HasFallback<UnkCtx[K]> 
                 ? { [LK in Uncapitalize<K>]?: UnkCtx[K] } 
                 : { [LK in Uncapitalize<K>]: UnkCtx[K] } 
             : never 
         : K extends string 
-            ? UnkCtx[K] extends IsOptional 
+            ? UnkCtx[K] extends HasFallback<UnkCtx[K]> 
                 ? { [LK in Uncapitalize<K>]?: UnkCtx[K] } 
                 : { [LK in Uncapitalize<K>]: UnkCtx[K] } 
           : never 
@@ -30,13 +30,18 @@ type ExcludeContext<Ctx, EclCtx> =
 type AsMetadata<M> = { [s: symbol]: M }
 type Is<T, M> = T extends {[s:symbol]: infer MVal} 
   ? MVal extends M 
-    ? true 
-    : false 
-  : false
-type MCoposable = "Composable"
-type MIsOptional = "IsOptional"
-type Composable = AsMetadata<MCoposable>
-type IsOptional = AsMetadata<MIsOptional>
+    ? T 
+    : never 
+  : never
+
+type TagComposable = "Composable"
+type TagFallback = "Fallback"
+
+type DeclareComposable = AsMetadata<TagComposable>
+type DeclareFallback = AsMetadata<TagFallback>
+
+type IsComposable<T> = Is<T, TagComposable>
+type HasFallback<T> = Is<T, TagFallback>
 
 
 /**
@@ -60,9 +65,9 @@ declare function fn<
   GExclusionContext extends {},
   GSimplifiedContext extends ExcludeContext<SimplifyContext<GUnknownContext>, GExclusionContext>,
 >(func: GFunction, context: GUnknownContext, exclusionContext?: GExclusionContext): 
-  Composable & ((props: GSimplifiedContext) => ReturnType<GFunction>)
+  DeclareComposable & ((props: GSimplifiedContext) => ReturnType<GFunction>)
 
-declare function defineProp<T,M extends {}>(defaultValue: T, metaData?: M): M extends { default: boolean } ? T & IsOptional : T
+declare function defineProp<T,M extends {}>(defaultValue: T, metaData?: M): M extends { default: boolean } ? T & DeclareFallback : T
 
 declare function TypeDefinition<
   GCtor extends (...a: any[]) => unknown, 
