@@ -27,22 +27,21 @@ type SimplifyContext<UnkCtx> =
 type ExcludeContext<Ctx, EclCtx> =
     EclCtx extends {} ? Omit<Ctx, Uncapitalize<keyof EclCtx>> : Ctx
 
-type AsMetadata<M> = { [s: symbol]: M }
-type Is<T, M> = T extends {[s:symbol]: infer MVal} 
-  ? MVal extends M 
-    ? T 
-    : never 
-  : never
+// metadata toolkit
 
-type TagComposable = "Composable"
-type TagFallback = "Fallback"
+type MetadataAdd<M extends string> = { [s: symbol]: {[K in M]: true} }
+type MetadataGet<M> = M extends {[s: symbol]: infer L} ? L : never
+type MetadataIs<T, M> = MetadataGet<T> extends MetadataGet<M> ? T : never
+type MetadataRemove<T, M> = T extends {[s:symbol]: infer MVals} 
+  ? {[s:symbol]: Omit<MVals, keyof MetadataGet<M>>}
+  : T
 
-type DeclareComposable = AsMetadata<TagComposable>
-type DeclareFallback = AsMetadata<TagFallback>
+// built-in metadata
 
-type IsComposable<T> = Is<T, TagComposable>
-type HasFallback<T> = Is<T, TagFallback>
-
+type DeclareComposable = MetadataAdd<"Composable">
+type DeclareFallback = MetadataAdd<"Fallback">
+type IsComposable<T> = MetadataIs<T, DeclareComposable>
+type HasFallback<T> = MetadataIs<T, DeclareFallback>
 
 /**
  * A function that takes a defining function then its 
