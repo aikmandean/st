@@ -67,11 +67,10 @@
     const Name = defineProp("")
 
     const printName = fn(props => {
-        props.name.length
     }, { Name })
 
     const printInfo = fn(props => {
-        // "name" does not exist in props.
+        props.name?.length // <- should NOT detect length as readonly
     }, { printName }, { Name })
 }
 // #endregion
