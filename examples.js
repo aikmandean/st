@@ -46,7 +46,7 @@
         props.useName.length
     }, { UseName })
 
-    printName({ useName: props => console.log(props.name) })
+    printName({ useName: props => props.name.length })
 }
 // #endregion
 

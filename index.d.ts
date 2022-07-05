@@ -72,8 +72,12 @@ declare function fn<
   DeclareComposable & ((props: GSimplifiedContext) => ReturnType<GFunction>)
 
 declare function defineProp<T,M extends {}>(defaultValue: T, metaData?: M): M extends { default: boolean } 
-  ? MetadataRemove<T & DeclareFallback, DeclareComposable> 
-  : MetadataRemove<T, DeclareComposable>
+  ? T extends MetadataIs<T, DeclareComposable>
+    ? MetadataRemove<T & DeclareFallback, DeclareComposable>
+    : T & DeclareFallback
+  : T extends MetadataIs<T, DeclareComposable>
+    ? MetadataRemove<T, DeclareComposable>
+    : T
 
 declare function TypeDefinition<
   GCtor extends (...a: any[]) => unknown, 
