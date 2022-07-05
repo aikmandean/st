@@ -6,18 +6,18 @@ type UnionToIntersection<T> =
 type SimplifyContext<UnkCtx> = 
   UnionToIntersection<
     { [K in keyof UnkCtx]: 
-      UnkCtx[K] extends Composable 
+      UnkCtx[K] extends IsComposable<UnkCtx[K]> 
         ? UnkCtx[K] extends ((p: infer P) => any)
           ? P extends never 
             ? {} 
             : P
           : K extends string 
-            ? UnkCtx[K] extends IsOptional 
+            ? UnkCtx[K] extends HasFallback<UnkCtx[K]> 
                 ? { [LK in Uncapitalize<K>]?: UnkCtx[K] } 
                 : { [LK in Uncapitalize<K>]: UnkCtx[K] } 
             : never 
         : K extends string 
-            ? UnkCtx[K] extends IsOptional 
+            ? UnkCtx[K] extends HasFallback<UnkCtx[K]> 
                 ? { [LK in Uncapitalize<K>]?: UnkCtx[K] } 
                 : { [LK in Uncapitalize<K>]: UnkCtx[K] } 
           : never 
@@ -27,8 +27,22 @@ type SimplifyContext<UnkCtx> =
 type ExcludeContext<Ctx, EclCtx> =
     EclCtx extends {} ? Omit<Ctx, Uncapitalize<keyof EclCtx>> : Ctx
 
-type Composable = {[s:symbol]: "Composable"}
-type IsOptional = {[s:symbol]: "Optional"}
+type AsMetadata<M> = { [s: symbol]: M }
+type Is<T, M> = T extends {[s:symbol]: infer MVal} 
+  ? MVal extends M 
+    ? T 
+    : never 
+  : never
+
+type TagComposable = "Composable"
+type TagFallback = "Fallback"
+
+type DeclareComposable = AsMetadata<TagComposable>
+type DeclareFallback = AsMetadata<TagFallback>
+
+type IsComposable<T> = Is<T, TagComposable>
+type HasFallback<T> = Is<T, TagFallback>
+
 
 /**
  * A function that takes a defining function then its 
@@ -47,13 +61,14 @@ type IsOptional = {[s:symbol]: "Optional"}
  */
 declare function fn<
   GUnknownContext,
-  GFunction extends (props: GSimplifiedContext, identicalProps: GSimplifiedContext) => unknown,
+  GFunction extends (props: GFallbackContext, identicalProps: GFallbackContext) => unknown,
   GExclusionContext extends {},
   GSimplifiedContext extends ExcludeContext<SimplifyContext<GUnknownContext>, GExclusionContext>,
+  GFallbackContext extends Required<GSimplifiedContext>,
 >(func: GFunction, context: GUnknownContext, exclusionContext?: GExclusionContext): 
-  Composable & ((props: GSimplifiedContext) => ReturnType<GFunction>)
+  DeclareComposable & ((props: GSimplifiedContext) => ReturnType<GFunction>)
 
-declare function defineProp<T,M extends {}>(defaultValue: T, metaData?: M): M extends { default: boolean } ? T & IsOptional : T
+declare function defineProp<T,M extends {}>(defaultValue: T, metaData?: M): M extends { default: boolean } ? T & DeclareFallback : T
 
 declare function TypeDefinition<
   GCtor extends (...a: any[]) => unknown, 
