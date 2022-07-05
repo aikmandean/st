@@ -46,7 +46,7 @@
         props.useName.length
     }, { UseName })
 
-    printName({ useName: props => console.log(props.name) })
+    printName({ useName: props => props.name.length })
 }
 // #endregion
 
@@ -72,15 +72,5 @@
     const printInfo = fn(props => {
         props.name?.length // <- should NOT detect length as readonly
     }, { printName }, { Name })
-}
-// #endregion
-
-// #region Temp Example 7 "Stacking Metadata"
-{
-    const Name = defineProp("")
-
-    const nameCallback = defineProp(fn(props => {}, { Name }), { default: true })
-
-    // DeclareComposable & DeclareFallback
 }
 // #endregion

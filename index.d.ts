@@ -31,9 +31,13 @@ type ExcludeContext<Ctx, EclCtx> =
 
 type MetadataAdd<M extends string> = { [s: symbol]: {[K in M]: true} }
 type MetadataGet<M> = M extends {[s: symbol]: infer L} ? L : never
-type MetadataIs<T, M> = MetadataGet<T> extends MetadataGet<M> ? T : never
+type MetadataIs<T, M> = MetadataGet<T> extends MetadataGet<M> 
+  ? MetadataGet<T>[keyof MetadataGet<M>] extends never
+    ? never 
+    : T   
+  : never
 type MetadataRemove<T, M> = T extends {[s:symbol]: infer MVals} 
-  ? {[s:symbol]: Omit<MVals, keyof MetadataGet<M>>}
+  ? T & {[s:symbol]: {[K in keyof MetadataGet<M>]: never}}
   : T
 
 // built-in metadata
@@ -67,7 +71,13 @@ declare function fn<
 >(func: GFunction, context: GUnknownContext, exclusionContext?: GExclusionContext): 
   DeclareComposable & ((props: GSimplifiedContext) => ReturnType<GFunction>)
 
-declare function defineProp<T,M extends {}>(defaultValue: T, metaData?: M): M extends { default: boolean } ? T & DeclareFallback : T
+declare function defineProp<T,M extends {}>(defaultValue: T, metaData?: M): M extends { default: boolean } 
+  ? T extends MetadataIs<T, DeclareComposable>
+    ? MetadataRemove<T & DeclareFallback, DeclareComposable>
+    : T & DeclareFallback
+  : T extends MetadataIs<T, DeclareComposable>
+    ? MetadataRemove<T, DeclareComposable>
+    : T
 
 declare function TypeDefinition<
   GCtor extends (...a: any[]) => unknown, 
