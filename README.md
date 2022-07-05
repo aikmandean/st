@@ -3,6 +3,9 @@ What's st? The best way to pass state in your application.
 Front-end? Back-end? Yep, it's better using st. 
 ## Launchpad 🚀
 Five minutes. That's all you need to get started. 
+```sh
+npm install @hwyblvd/st
+```
 ### An early comparison
 Below, notice how we duplicate `{ count: number }`. We wanted 
 our functions to be strongly typed, but can we spare a few keystrokes?
