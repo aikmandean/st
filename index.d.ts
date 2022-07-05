@@ -27,14 +27,17 @@ type SimplifyContext<UnkCtx> =
 type ExcludeContext<Ctx, EclCtx> =
     EclCtx extends {} ? Omit<Ctx, Uncapitalize<keyof EclCtx>> : Ctx
 
-type Composable = {[s:symbol]: "Composable"}
-type IsOptional = {[s:symbol]: "Optional"}
-
+type AsMetadata<M> = { [s: symbol]: M }
 type Is<T, M> = T extends {[s:symbol]: infer MVal} 
   ? MVal extends M 
     ? true 
     : false 
   : false
+type MCoposable = "Composable"
+type MIsOptional = "IsOptional"
+type Composable = AsMetadata<MCoposable>
+type IsOptional = AsMetadata<MIsOptional>
+
 
 /**
  * A function that takes a defining function then its 
