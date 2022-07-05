@@ -74,13 +74,3 @@
     }, { printName }, { Name })
 }
 // #endregion
-
-// #region Temp Example 7 "Stacking Metadata"
-{
-    const Name = defineProp("")
-
-    const nameCallback = defineProp(fn(props => {}, { Name }), { default: true })
-
-    // DeclareComposable & DeclareFallback
-}
-// #endregion
