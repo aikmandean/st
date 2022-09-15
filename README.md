@@ -184,12 +184,12 @@ declare firstName as a string like `firstName: ""`. You aren't required
 to use `""`, `"hello world"` would also work. Usually, st ignores the exact 
 string. We only gather its type. What if you want that exact string?
   
-In st, we export a `Mod` object. `Mod.optional()` is a prop modifer. It 
+In st, we export a modifier functions. They all start with captial M. `MOptional()` is a prop modifer. It 
 marks a prop type as not required.
   
 ```js
 const { Message } = declareProps({
-    message: "Hello world" // not using Mod.optional
+    message: "Hello world" // not using MOptional
 })
 
 const printMessage = fn(props => console.log(props.message), Message)
@@ -199,11 +199,11 @@ printMessage({}) // error: Called printMessage, did not provide 'message'.
   
 By adding the optional modifier, our error goes away. Our prop becomes 
 optional. So, what if we don't provide it, will it be undefined? No. 
-Let's see how to use `Mod.optional()` to learn how it avoids undefined.
+Let's see how to use `MOptional()` to learn how it avoids undefined.
   
 ```js
 const { SafeMessage } = declareProps({
-    safeMessage: Mod.optional("Hello world")
+    safeMessage: MOptional("Hello world")
 })
 
 const printMessage = fn(props => console.log(props.safeMessage), SafeMessage)
@@ -267,29 +267,29 @@ printEven({ evenNumber: 5 }) // no static error, but crashes when ran!
   
 In both cases above, we're passing the props directly. If 
 `EvenNumber` has used a validator, both cases would be TypeScript errors.
-`Mod` has a special function for passing props that require validation, 
-`Mod.new()`. To use it, pass the prop type, then the input data.  
+`MNew` is a special function for passing props that require validation, 
+`MNew()`. To use it, pass the prop type, then the input data.  
    
 In our example, let's say EvenNumber will accept `props: { anyNumber: number }`, 
 but will only return `{ evenNumber: number }` if our number was even.
   
 ```js
-const props1 = Mod.new(EvenNumber, { anyNumber: 2 })
+const props1 = MNew(EvenNumber, { anyNumber: 2 })
 printEvent(props1)
 
 try {
-    Mod.new(EvenNumber, { anyNumber: 5 }) // will throw here
+    MNew(EvenNumber, { anyNumber: 5 }) // will throw here
 } catch(error) { 
 
 }
 ```
   
 When you use a validator, your functions won't throw! Only 
-`Mod.new()` will throw. Functions that use validated props 
+`MNew()` will throw. Functions that use validated props 
 can pass them around - they won't need to revalidate. 
 Prop validators create a hard border in your app, prop errors 
 won't come up inside your borders. How do you create a validator? 
-`Mod.from()`.
+`MFrom()`.
   
 ```js
 const { AnyNumber } = declareProps({
@@ -305,11 +305,11 @@ const validateEven = fn(props => {
 
 const { EvenNumber } = declareProps({
     /** 
-     * This prop uses Mod.from() modifier. You  
+     * This prop uses MFrom() modifier. You  
      * won't be able to pass { evenNumber: 2 } 
-     * directly. Use Mod.new() instead.
+     * directly. Use MNew() instead.
      */
-    evenNumber: Mod.from(validateEven),
+    evenNumber: MFrom(validateEven),
 })
 ```
   
@@ -504,7 +504,7 @@ spreads can pass props you need but also some you don't, type composition
 request all its dependencies for you regardless of whether you need them all.
   
 There's one specific modifier to help trim type composition. 
-Use `Mod.hide()` to opt-out of specific prop types. If your 
+Use `MHide()` to opt-out of specific prop types. If your 
 function asks for `label`, but you want to pass a specific value 
 instead of adding it to your dependencies, use hide().
 ```js
@@ -519,7 +519,7 @@ const ToggleCounter = fn(props => {
 // after
 const ToggleCounter = fn(props => {
     return /*...*/
-}, IsActive, Mod.hide(Counter, Label))
+}, IsActive, MHide(Counter, Label))
 
 <ToggleCount isActive count={2} twColor="red" /> // no error, good to go
 ```
