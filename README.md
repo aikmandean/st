@@ -15,7 +15,7 @@ const printCount = fn(props => {
 
 }, FirstName, LastName)
 ```
-It's fastest way to share strong types throughout your code 
+It's the fastest way to share strong types throughout your code 
 in JavaScript or TypeScript. Even TypeScript users get easier & stronger types. Our little library, st, is effortless to use but promises a big add.
 1. Types in JavaScript - doesn't require default params
 2. Add a comment to your type, everywhere it's used will have it too
@@ -28,22 +28,22 @@ in JavaScript or TypeScript. Even TypeScript users get easier & stronger types. 
 | **Overview** | Start using ST, rewrite <br> less code, escape from globals.
 | *Declaring <br> Props* | 🪴 **First JavaScript Walkthrough**
 | | *A starter guide to authoring props.*
-| &nbsp;<br>5 min. | &nbsp;<br>**Commenting throughout your codebase**
+| &nbsp;<br>[5 min.](#commenting-throughout-your-codebase) | &nbsp;<br>**Commenting throughout your codebase**
 | | *Comment once, document everywhere.*
 | | *Props, comments, markdown.*
-| &nbsp;<br>10 min. | &nbsp;<br>**Letting props be optional**
-| | *Basics of prop modifers.*
+| &nbsp;<br>[10 min.](#letting-props-be-optional) | &nbsp;<br>**Letting props be optional**
+| | *Basics of prop modifiers.*
 | | *Using the `optional` modifier.*
-| &nbsp;<br>15 min. | &nbsp;<br>**Validating a prop from custom rules**
-| | *How to use the `new` modifier for prop classes.*
+| &nbsp;<br>[15 min.](#validating-a-prop-from-custom-rules) | &nbsp;<br>**Validating a prop from custom rules**
+| | *How to use the `try` modifier for prop classes.*
 | | *Writing your own prop class.*
 | *Functions & <br> Components* | 🪴 **First JavaScript Walkthrough**
 | | *A starter guide to writing functions.*
 | | *The dependency list.*
-| &nbsp;<br>5 min. | &nbsp;<br>**Owning React**
+| &nbsp;<br>[5 min.](#owning-react) | &nbsp;<br>**Owning React**
 | | *A new way to add props to components.*
 | | *Passing props using strongly-type spread syntax.*
-| &nbsp;<br>10 min. | &nbsp;<br>**Prop Shortcuts**
+| &nbsp;<br>[10 min.](#prop-shortcuts) | &nbsp;<br>**Prop Shortcuts**
 | | *An advanced pattern to lighten the dependency list.*
 | | *Composing dependencies from functions.*
 | | *Using the `hide` modifier to uncompose.*
@@ -54,23 +54,25 @@ library; that means, "write less TS." We wanted less `any`,
 more safety. So how does it hold up? Here's an example of 
 three TypeScript functions.
 ```ts
+// TypeScript
+// Before st
 const printCount = (props: { count: number, time: Date }) => { /* ... */ }
 const twiceCount = (props: { count: number, time: Date }) => { /* ... */ }
 const countIsOdd = (props: { count: number, time: Date }) => { /* ... */ }
 ```
 Typing our props this way isn't too bad, if we wanted to 
-change type `number` to something else, like JavaScript's `BigInt` it wouldn't be impossible. But st? It's easy.
+change type `number` to something else, like JavaScript's `BigInt`, that wouldn't be impossible. But st? It's easy.
 ```ts
+// JS or TS
+// After
 import { fn } from "@hwyblvd/st"
 import { Count, Time } from "./my-type"
 const printCount = fn(props => { /* ... */ }, Count, Time)
 const twiceCount = fn(props => { /* ... */ }, Count, Time)
 const countIsOdd = fn(props => { /* ... */ }, Count, Time)
 ```
-Our hope is that adding strong types to your props will be 
-so easy that you won't need to use globals, Context, or 
-multi-parameter functions. We'll always let you mix-n-match. 
-Still, st gives you a few simple tools to "write once, never rewrite."
+We hope it's so easy that you won't need globals or Context. But, you can always mix-n-match. 
+Use the few simple tools in st to "write once, never rewrite."
   
 Where are we declaring `Count` or `Time`?  
   
@@ -99,6 +101,8 @@ has `.count` exactly how you would have written in TypeScript natively.
   
 Here's a full example that you can copy/paste into a file.
 ```js
+import { declareProps, fn } from "@hwyblvd/st"
+
 const { FirstName, LastName } = declareProps({
     firstName: "",
     lastName: ""
@@ -108,7 +112,7 @@ const printName = fn(props => {
 
     console.log(props.firstName) // string, a first name
     
-    console.log(props.dateOfBirth) // error, function doesn't have DateOfBirth
+    console.log(props.dateOfBirth) // 🚩 static error: function doesn't have DateOfBirth
 
 }, FirstName, LastName)
 ```
@@ -148,7 +152,7 @@ You can place most of your prop types in one file, document them all there,
 then get an easy overview of your program - while also getting in-editor 
 documentation for each prop you use in any function in your entire codebase.
 ```js
-// my-types.js
+// my-type.js
 export const { Name, Age } = declareProps({
     /**
      * ### Shoe Brand Name
@@ -179,22 +183,23 @@ make it harder, more strict, using TypeScript's branded types.
 You can skip these if you'd like, start writing [functions in st](#first-javascript-function-walkthrough) or jump to [React Components](#owning-react)
   
 ### Letting props be optional
-Optional props is the first `modifer` you'll use. Until now, we 
+Optional props is the first `modifier` you'll use. Until now, we 
 declare firstName as a string like `firstName: ""`. You aren't required 
-to use `""`, `"hello world"` would also work. Usually, st ignores the exact 
+to use `""`, so `"hello world"` would also work. Usually, st ignores the exact 
 string. We only gather its type. What if you want that exact string?
   
-In st, we export a modifier functions. They all start with captial M. `MOptional()` is a prop modifer. It 
+In st, we export modifier functions. They all start with captial M. `MOptional()` is a prop modifier. It 
 marks a prop type as not required.
   
 ```js
+// Before optional
 const { Message } = declareProps({
-    message: "Hello world" // not using MOptional
+    message: "Hello world" // <- not wrapped in MOptional
 })
 
 const printMessage = fn(props => console.log(props.message), Message)
 
-printMessage({}) // error: Called printMessage, did not provide 'message'.
+printMessage({}) // 🚩 static error: Did not provide 'message'.
 ```
   
 By adding the optional modifier, our error goes away. Our prop becomes 
@@ -202,23 +207,24 @@ optional. So, what if we don't provide it, will it be undefined? No.
 Let's see how to use `MOptional()` to learn how it avoids undefined.
   
 ```js
+// After
 const { SafeMessage } = declareProps({
     safeMessage: MOptional("Hello world")
 })
 
 const printMessage = fn(props => console.log(props.safeMessage), SafeMessage)
 
-printMessage({}) // no error! safeMessage is defaulting to "Hello world"
+printMessage({}) // safeMessage defaulted to "Hello world"
 ```
   
-Adding `optional` saves the value we use when declaring the prop. 
-Then, if we don't pass the prop, it'll fallback to that value. 
+Adding `MOptional` saves the value we use when declaring the prop. 
+Then, if we don't pass the prop, it'll fall back to that value. 
 Modifiers can loosen our props to make it easier, or tighten 
-our props, adding validators. Use `optional()` to make your 
-function easier to call.
+our props, adding validators. Use `MOptional()` **to make your 
+function easier to call**.
   
-What does it mean to make a fucntion harder to call? 
-Why might you do that? The next sections [covers `from()`](#validating-a-prop-from-custom-rules), an advanced 
+What does it mean to make a function harder to call? 
+Why might you do that? The next sections [covers `MClass()`](#validating-a-prop-from-custom-rules), an advanced 
 feature to add specific validators, or rules, to your props.
   
 ### Validating a prop from custom rules
@@ -244,7 +250,7 @@ const { Age, PrivateAge, PublicAge } = declareProps({
 ```
   
 In JavaScript, if we could pass `age` through a validator, we'd know if 
-its a `privateAge` or `publicAge`. Still, there is not promise that 
+it's a `privateAge` or `publicAge`. Still, there's no guarantee that 
 someone later passes a publicAge where we expect a privateAge. 
 To st, both are plain numbers. Prop validators to the rescue.
   
@@ -253,43 +259,52 @@ be able to pass a `number` or `string` or any type directly to it.
 This is how the security guarantee operates.
   
 ```js
+// Before validators
 import { EvenNumber } from "./my-types.js"
 import { printEven } from "./my-functions.js"
 
-// In this example,
-// EvenNumber didn't use 
-// a validator. It's just 
-// a number.
+// Any function using evenNumber 
+// could crash at runtime.
+
+// No way of strictly validating 
+// prop before it's passed in.
 
 printEven({ evenNumber: 4 }) // no error
-printEven({ evenNumber: 5 }) // no static error, but crashes when ran!
+printEven({ evenNumber: 5 }) // ❌ crashes when ran!
 ```
   
 In both cases above, we're passing the props directly. If 
-`EvenNumber` has used a validator, both cases would be TypeScript errors.
-`MNew` is a special function for passing props that require validation, 
-`MNew()`. To use it, pass the prop type, then the input data.  
+`EvenNumber` has used a validator, **both cases would be TypeScript errors**.
+Instead, `MTry()` upgrades normal types to validated props. 
+To use it, pass the prop type, then the input data.  
    
 In our example, let's say EvenNumber will accept `props: { anyNumber: number }`, 
 but will only return `{ evenNumber: number }` if our number was even.
   
 ```js
-const props1 = MNew(EvenNumber, { anyNumber: 2 })
-printEvent(props1)
+// After
+let evenNumber
+
+// Now, printEvent 
+// won't crash 🎉 
+// We pushed the 'throwable' 
+// code into MTry
 
 try {
-    MNew(EvenNumber, { anyNumber: 5 }) // will throw here
+    evenNumber = MTry(EvenNumber, { anyNumber: 5 })
 } catch(error) { 
-
+    evenNumber = MTry(EvenNumber, { anyNumber: 2 })
 }
+
+printEvent({ evenNumber }) // <- evenNumber is always even at this point
 ```
   
 When you use a validator, your functions won't throw! Only 
-`MNew()` will throw. Functions that use validated props 
+`MTry()` will throw. Functions that use validated props 
 can pass them around - they won't need to revalidate. 
-Prop validators create a hard border in your app, prop errors 
+Prop validators create a hard border in your app, so prop errors 
 won't come up inside your borders. How do you create a validator? 
-`MFrom()`.
+`MClass()`.
   
 ```js
 const { AnyNumber } = declareProps({
@@ -305,11 +320,11 @@ const validateEven = fn(props => {
 
 const { EvenNumber } = declareProps({
     /** 
-     * This prop uses MFrom() modifier. You  
+     * This prop uses MClass() modifier. You  
      * won't be able to pass { evenNumber: 2 } 
-     * directly. Use MNew() instead.
+     * directly. Use MTry() instead.
      */
-    evenNumber: MFrom(validateEven),
+    evenNumber: MClass(validateEven),
 })
 ```
   
@@ -337,11 +352,11 @@ const printFirstName = fn(props => {
 
 }, FirstName)
 
-printFirstName({}) // static error, 'firstName' missing
+printFirstName({}) // 🚩 static error: 'firstName' missing
 
-printFirstName({ dateOfBirth: '08-30-71' }) // static error, 'firstName' missing
+printFirstName({ dateOfBirth: '08-30-71' }) // 🚩 static error: 'firstName' missing
 
-printFirstName({ firstName: 5 * 4 }) // static error, 'firstName' is number, not string
+printFirstName({ firstName: 5 * 4 }) // 🚩 static error: 'firstName' is number, not string
 ```
   
 So far, `fn()` looks like it takes two parameters. The first is 
@@ -349,15 +364,15 @@ what function we are writing, second is a prop type. The second
 param does something strange, it changes what type `props` is. 
 When `FirstName` is our second param, `props.firstName` becomes 
 available. However, our function also needs a `firstName` prop passed 
-to it. All this is happening in our editor. It part of st's fn(), 
+to it. All this is happening in our editor. It's part of st's fn() 
 beside some powerful type inference behind the scenes.
   
 In the overview, we say that `fn()` could take three parameters:
 ```js
-// from st's overview
+// From the overview section
 const printCount = fn(props => {/*...*/}, Count, Time)
 ```
-How many parameters can fn take? No limit. It's uses JavaScript's 
+How many parameters can fn take? No limit. It uses JavaScript's 
 "rest parameters" to accept as many as you provide. Each param 
 after the first (your function) adds a prop type to `props`.
   
@@ -381,7 +396,7 @@ see [Declaring Props](#first-javascript-prop-walkthrough) to learn how to
 create prop types. The next section covers [Components, React, JS spread syntax](#owning-react)
   
 ### Owning React
-Unsurprisingly, st was designed for React. Function you write take only 
+Unsurprisingly, st was designed for React. Functions you write take only 
 one parameter - specifically a props object. Let's upgrade `printCount()` 
 from before into a React component.
 ```jsx
@@ -398,20 +413,26 @@ const PrintCount = fn(props => {
 Using our component is like any other, here, we design a parent 
 component that passes `count` down to `PrintCount`.
 ```jsx
+// Before React spread syntax
 const Counter = fn(props => {
     return (
         <div className={props.twColor}>
-
+            {/*
+                                Repeating props is fine, 
+                                but is unnecessary.
+                                |
+                                v
+            */}
             <PrintCount label={props.label} count={props.count} />
-
         </div>
     )
 }, Label, Count, TwColor)
 ```
   
-We'll focus on this React example look out for pitfalls, but don't forget, 
-outside of React we might wrote something like:
+We'll focus on this React example to look out for pitfalls, but don't forget, 
+outside of React we may have written something like:
 ```js
+// Before JavaScript spread syntax
 printCount({ label: props.label, count: props.count })
 ```
 In both cases, we can use JavaScript spread syntax. Spreads exist in 
@@ -423,6 +444,7 @@ Because `PrintCount` needs `label`, `count`, but not `twColor`
 we can spread all three into it. PrintCount safely ignores 
 twColor since it didn't ask for it in its dependency list.
 ```jsx
+// After
 const Counter = fn(props => {
     return (
         <div className={props.twColor}>
@@ -434,7 +456,7 @@ const Counter = fn(props => {
 }, Label, Count, TwColor)
 ```
   
-What if, we added one more wrapper component. Say, we just graduated 
+What if, we added one more wrapper component? Say, we just graduated 
 a React tutorial, off to write some real-world code.
 ```js
 const ToggleCounter = fn(props => {
@@ -459,37 +481,41 @@ while running. Using type composition alongside spreads is as easy as Context
 but as safe as the types we've used so far.
   
 ### Prop Shortcuts
-Prop drilling, dependency injection, deeply nested parameters 
+Prop drilling, dependency injection, or deeply nested parameters 
 are tedious to pass, hard to change later, easy to break. The answer? 
 Spreads. Half of the equation is passing props easily through components 
 that aren't the direct users. In the previous section, we used JavaScript 
 spread syntax for prop passing. Can we have spreads for the prop's types too?
 Yes.
 
-All functions you write using `fn()` has a built-in feature, composability. 
+All functions you write using `fn()` have a built-in feature, composability. 
 So far, we've always passed prop types to our dependency list. We can also 
 pass functions we expect to call. Look closely at our dependency list in the 
 following before / after:
 ```jsx
-// before
+// Before prop shortcuts
 const ToggleCounter = fn(props => {
 
-    console.log(props.isActive) // boolean, true or false
+    console.log(props.isActive)
 
-    console.log(props.count) // number, the count you'll pass
+    return <Counter {{/* ... */}} />
 
-    return /*...*/
+    // ⚠️ Long dependency list gets harder to manage
+    // |
+    // v
 }, IsActive, Label, Count, TwColor)
 ```
 ```jsx
-// after
+// After
 const ToggleCounter = fn(props => {
 
-    console.log(props.isActive) // boolean, true or false
+    console.log(props.isActive)
 
-    console.log(props.count) // number, the count you'll pass
-
-    return /*...*/
+    return <Counter {{/* ... */}} />
+    
+    // Short dependencies using "shortcuts"
+    // |
+    // v
 }, IsActive, Counter)
 ```
   
@@ -501,24 +527,36 @@ You can pass one or more functions as dependencies. You can pass functions
 alongside prop types, like above. You aren't required to call the functions 
 in your dependency list, it's simply a way to compose prop types. Just as 
 spreads can pass props you need but also some you don't, type composition 
-request all its dependencies for you regardless of whether you need them all.
+requests all its dependencies for you regardless of whether you need them all.
   
 There's one specific modifier to help trim type composition. 
 Use `MHide()` to opt-out of specific prop types. If your 
 function asks for `label`, but you want to pass a specific value 
-instead of adding it to your dependencies, use hide().
+instead of adding it to your dependencies, use `MHide`.
 ```js
-// before
-const ToggleCounter = fn(props => {
-    return /*...*/
+// Before
+const ToggleCounter = fn(props => { 
+    let label = "Shoe Sales"
+    return /*...*/ 
+
+    //          ⚠️ Requires all <Counter> props 
+    //          passed but label shouldn't be! 
+    //          |
+    //          v
 }, IsActive, Counter)
 
-<ToggleCount isActive count={2} twColor="red" /> // static error, missing "label"
+<ToggleCount isActive count={2} twColor="red" /> // 🚩 static error: missing "label"
 ```
 ```js
-// after
-const ToggleCounter = fn(props => {
-    return /*...*/
+// After
+const ToggleCounter = fn(props => { 
+    let label = "Shoe Sales"
+    return /*...*/ 
+
+    //          Requires most <Counter> props 
+    //          except for label.
+    //          |
+    //          v
 }, IsActive, MHide(Counter, Label))
 
 <ToggleCount isActive count={2} twColor="red" /> // no error, good to go
@@ -527,9 +565,10 @@ const ToggleCounter = fn(props => {
 This is the last section covering declaring functions in st.
 
   
-## Thank you
-This library is based on a demo written by Tate on June 12th 2022. 
-Josiah helped guide the direction of this release of st.
-  
-### Underdocumented
+## Underdocumented
 Library exports `TypeDefinition` for authors creating their own version of `declareProps`, `SymbolDefinition` for creating decorators.
+  
+## Thank you
+This library is based on a demo written by Tate on June 12th, 2022. 
+Josiah helped feature guide most of this release of st.
+  
