@@ -48,12 +48,12 @@ namespace Internals {
   export namespace DeclareProps {
     export type Index<T> = Util.UnionToIntersection<{ [K in keyof T]: {[UK in Capitalize<K>]: 
       
+      T[K] extends Metadata.Pure<T[K]> 
+        ? { [K1 in K]: T[K] } :
       T[K] extends Fallback 
         ? { [K1 in K]?: Metadata.Get<T[K]> } :
       T[K] extends Name<any> & ((p: infer P) => infer R) 
         ? { [K1 in K]: (p: P) => R } :
-      T[K] extends Metadata.Pure<T[K]> 
-        ? { [K1 in K]: T[K] } :
       { [K1 in K]: Metadata.Get<T[K]> }
     
     } }[keyof T]>
@@ -77,7 +77,7 @@ namespace Internals {
   export namespace Metadata {
     export const S: typeof Declare.S;
     export const SV: typeof Declare.SValue;
-    export type Pure<T> = T extends { [s: symbol]: { [S]: any } } ? never : T 
+    export type Pure<T> = T extends { [s: symbol]: { [S]: infer V } } ? V extends {} ? never : T : T 
     export type New<K,V=true> = { [s: symbol]: { [S]: { [K1 in K]: V } } }
     export type Safe<T> = T extends Pure<T> ? New<typeof SV, T> : T
     export type Get<T,K=typeof SV> = T[symbol][typeof S][K]
