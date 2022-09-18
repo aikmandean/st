@@ -1,105 +1,133 @@
-/*
- * Create functions that have composable type inferencing.
- * 
- * We export three functions (fn, TypeDefinition, defineProp).
- * Whether client-side or server-side, use fn to create components.
- * Application developers will use defineProp to create types.
- * Library authors will use TypeDefinition to add runtime functionality to types.
- */
 
-// "Executables", holds custom type definitions that have runtime functionality.
+function TypeDefinition(description, constructor, consumer = () => {}) {
+    const S = Symbol(description)
+    Executables[S] = consumer
+    return [constructor, (o,v=S)=>o[S]=v==S?o[S]:v]
+}
 
-const Executables = {};
+const Executables = {}
+const COMPOSED = Symbol.for("(st)composable")
 
-// "fn", is defined in the preamble.
-
-export function fn(func, data = {}) {
-    // "symbols", collects the custom types to be written to "func".
-    const symbols = {}
-    // "defaults", is a custom type that comes out-of-the-box.
-    const defaults = {}
-    // "funcName", is a second built-in type.
-    const funcName = func.name || data.fn || "(fn)fallbackFunctionName"
-
-    for (const key in data) 
-        if(data[key])
-            for (const sym of Object.getOwnPropertySymbols(data[key]))
-                if(typeof Executables[sym] == "function")
-                    symbols[sym] = Executables[sym](
-                        uncapitalize(key), 
-                        defaults, 
-                        data[key][sym], 
-                        symbols[sym]
-                    )
+function fn(funcName, factoryFunction, ...dependUnions) {
+    if(typeof funcName == "string")
+        Object.defineProperty(factoryFunction, "name", { value: funcName || "(st)fallbackFunctionName" })
+    else {
+        dependUnions.unshift(factoryFunction)
+        factoryFunction = funcName
+        funcName = factoryFunction.name || "(st)fallbackFunctionName"
+    }
     
-    // your input function is decorated so that it has a new name, default values, or other custom types.
-    return (
-        Object.assign(
-            { [funcName]: (props = {}) => (
-                fallbackAssign(props, defaults) 
-                && func(props, props)) 
-            } [funcName], 
-            symbols))
+    // // DEBUG MODE
+    // const st = eval(`({
+    //     ["(st)${funcName}"](props) {
+    //         utils.fallbackAssign(props, defaults)
+    //         return factoryFunction(props, props)
+    //     }
+    // }["(st)${funcName}"])`)
 
-    // this is the original implementation to apply custom types, but it doesn't support getter properties.
-    return (
-        Object.assign({ [funcName]: (props, _ = {}) => (
-                Object.assign(
-                    _, 
-                    defaults, 
-                    props) 
-                && func(_, _)) 
-            } [funcName], symbols))
-}
+    // // RELEASE MODE
+    Object.defineProperty(st, "name", { value: funcName })
 
-// "TypeDefinition", is defined in the preamble.
+    const defaults = {}
+    st[COMPOSED] = {}
 
-export function TypeDefinition(constructor, consumer, description = "") {
-    const S = Symbol(description);
-    Executables[S] = consumer;
-    return (
-        Object.assign(
-            function(...args) {
-                return (
-                    { [S]: 
-                        constructor(...args) 
-                    })
-            }, 
-        { symbol: S }))
-}
-
-// "defineProp", is defined in the preamble.
-
-export const defineProp = TypeDefinition(
-    (like, metadata = {}) => {
-        metadata = Object.assign({}, metadata)
-        if(metadata.default)
-            metadata.default = like
-        return metadata
-    },
-    (key, defaults, metadataList, existingList = []) => {
-        if(!Array.isArray(metadataList)) metadataList = [{metadata: metadataList, key}]
+    for (const propObj of dependUnions) 
+    for (const [name, value] of utils.composeProps(propObj, st[COMPOSED])) 
+    for (const S of Object.getOwnPropertySymbols(value)) 
+        Executables[S]?.(name, defaults, value)
         
-        for (const {key, metadata} of metadataList) {
-            if(metadata.default)
-                defaults[key] = metadata.default
-            existingList.push({ key, metadata })
-        }
-        return existingList
-    }, "defineProp")
+    return st
 
-// "uncapitalize", helps differentiate between a type vs its correlating prop.
-
-function uncapitalize(string = "") {
-    const s = string[0].toLowerCase()
-    return `${s}${string.substr(1)}`
+    function st(props) {
+        utils.fallbackAssign(props, defaults)
+        return factoryFunction(props, props)
+    }
 }
 
-// "fallbackAssign", helps support getter properties.
+const utils = {
+    composeProps(propObj, symbols) {
+        // return Object.entries(propObj[COMPOSED] || propObj)
+        const entries = []
+        let props = propObj
+        if(COMPOSED in propObj) 
+            props = propObj[COMPOSED]
+        else 
+            for (const key in Object.getOwnPropertySymbols(props))
+                entries.push([key, symbols[key] = props[key]])
+        
+        for (const key in props) 
+            entries.push([key, symbols[key] = props[key]])
+            
+        return entries
+    },
+    fallbackAssign(target, source) {
+        for (const key in source)
+            if(!(key in target))
+                target[key] = source[key]
+        return target
+    },
+    capitalize(string = "") {
+        const s = string[0].toUpperCase()
+        return `${s}${string.substr(1)}`
+    }
+}
 
-function fallbackAssign(target, source) {
-    for (const key in source)
-        if(!(key in target))
-            target[key] = source[key]
-    return target
+const [declareProps, getSetSymProps] = TypeDefinition("(st)declareProps", 
+    (manyPropDefs = {}) => {
+        const outObj = {}
+        for (const propKey in manyPropDefs) {
+            let propDef = {}
+            if(!getSetSymFall(manyPropDefs[propKey])) 
+                getSetSymProps(propDef, manyPropDefs[propKey])
+            else propDef = manyPropDefs[propKey]
+            
+            outObj[utils.capitalize(propKey)] = { [propKey]: propDef }
+        }
+        return outObj
+    },
+    (propName, componentFallbackProps, propValue) => {
+        
+        if(getSetSymFall(propValue))
+            componentFallbackProps[propName] = getSetSymProps(propValue)
+        
+    }
+)
+const [negate] = TypeDefinition("(st)negate", 
+    (funcComposable = () => {}, manyPropDefs = {}) => {
+        const outObj = Object.assign({}, funcComposable[COMPOSED])
+        for (const name in manyPropDefs) 
+            delete outObj[name]
+        
+        return outObj
+    }
+)
+const [fallback, getSetSymFall] = TypeDefinition("(st)fallback", 
+    (value) => { 
+        const wrapper = {}
+        getSetSymProps(wrapper, value)
+        getSetSymFall(wrapper, true)
+        return wrapper
+    }
+)
+const [brand, getSetSymBrand] = TypeDefinition("(st)brand",
+    (validator) => {
+        const wrapper = {}
+        getSetSymProps(wrapper, null)
+        getSetSymBrand(wrapper, validator)
+        return wrapper
+    }
+)
+const asBrand = (funcObj, props) => {
+    for (const key in funcObj) 
+        return getSetSymBrand(getSetSymProps(funcObj[key]))(props)
+}
+
+export { 
+    declareProps, 
+    fallback as MOptional, 
+    negate as MHide,
+    brand as MClass,
+    asBrand as MTry,
+    fn, 
+    TypeDefinition 
 }
