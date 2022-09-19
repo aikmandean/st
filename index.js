@@ -121,6 +121,7 @@ const asBrand = (funcObj, props) => {
     for (const key in funcObj) 
         return getSetSymBrand(getSetSymProps(funcObj[key]))(props)
 }
+const defineProp = (like, metadata) => metadata
 
 export { 
     declareProps, 
@@ -128,6 +129,7 @@ export {
     negate as MHide,
     brand as MClass,
     asBrand as MTry,
+    defineProp as MCast,
     fn, 
     TypeDefinition 
 }

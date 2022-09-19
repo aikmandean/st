@@ -98,3 +98,4 @@ export function MTry<
   P extends F extends (p: infer P1) => any ? P1 : never,
   F = T extends Brand<infer F1>[symbol][typeof Internals.Declare.S] ? F1 : never
 >(t: { [x: string]: T },p:P): T
+export function MCast<T>(t:T,x:any): T
