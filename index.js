@@ -1,18 +1,35 @@
+/*
+ * Create functions that have composable type inferencing.
+ * 
+ * We export three functions (fn, TypeDefinition, declareProps).
+ * Whether client-side or server-side, use fn to create components.
+ * Application developers will use declareProps to create prop types.
+ * Library authors will use TypeDefinition to add runtime functionality to types.
+ * We export five modifiers (MOptional, MHide, MClass, MTry, MCast).
+ */
+
+// global state used by ST
+
+const Executables = {};
+const ST = fn.symbol = Symbol("(st)composable");
+
+// add function to executables
 
 function TypeDefinition(description, constructor, consumer = () => {}) {
     const S = Symbol(description)
     Executables[S] = consumer
-    return [constructor, (o,v=S)=>o[S]=v==S?o[S]:v]
+    constructor.symbol = S
+    return [constructor, (o,v=S)=>v==S?o[S]:o[S]=v]
 }
 
-const Executables = {}
-const COMPOSED = Symbol.for("(st)composable")
+// decorate function using executables
 
 function fn(funcName, factoryFunction, ...dependUnions) {
     if(typeof funcName == "string")
         Object.defineProperty(factoryFunction, "name", { value: funcName || "(st)fallbackFunctionName" })
     else {
-        dependUnions.unshift(factoryFunction)
+        if(factoryFunction)
+            dependUnions.unshift(factoryFunction)
         factoryFunction = funcName
         funcName = factoryFunction.name || "(st)fallbackFunctionName"
     }
@@ -20,7 +37,7 @@ function fn(funcName, factoryFunction, ...dependUnions) {
     // // DEBUG MODE
     // const st = eval(`({
     //     ["(st)${funcName}"](props) {
-    //         utils.fallbackAssign(props, defaults)
+    //         utilFallbackAssign(props, defaults)
     //         return factoryFunction(props, props)
     //     }
     // }["(st)${funcName}"])`)
@@ -29,107 +46,119 @@ function fn(funcName, factoryFunction, ...dependUnions) {
     Object.defineProperty(st, "name", { value: funcName })
 
     const defaults = {}
-    st[COMPOSED] = {}
+    st[ST] = {}
 
     for (const propObj of dependUnions) 
-    for (const [name, value] of utils.composeProps(propObj, st[COMPOSED])) 
+    for (const [name, value] of utilComposeProps(propObj, st[ST])) 
     for (const S of Object.getOwnPropertySymbols(value)) 
         Executables[S]?.(name, defaults, value)
         
     return st
 
     function st(props) {
-        utils.fallbackAssign(props, defaults)
+        utilFallbackAssign(props, defaults)
         return factoryFunction(props, props)
     }
 }
 
-const utils = {
-    composeProps(propObj, symbols) {
-        // return Object.entries(propObj[COMPOSED] || propObj)
-        const entries = []
-        let props = propObj
-        if(COMPOSED in propObj) 
-            props = propObj[COMPOSED]
-        else 
-            for (const key in Object.getOwnPropertySymbols(props))
-                entries.push([key, symbols[key] = props[key]])
-        
-        for (const key in props) 
-            entries.push([key, symbols[key] = props[key]])
-            
-        return entries
-    },
-    fallbackAssign(target, source) {
-        for (const key in source)
-            if(!(key in target))
-                target[key] = source[key]
-        return target
-    },
-    capitalize(string = "") {
-        const s = string[0].toUpperCase()
-        return `${s}${string.substr(1)}`
-    }
-}
+// built-ins
 
-const [declareProps, getSetSymProps] = TypeDefinition("(st)declareProps", 
+const [Declare, inDeclare] = TypeDefinition("(st)declareProps", 
     (manyPropDefs = {}) => {
-        const outObj = {}
-        for (const propKey in manyPropDefs) {
-            let propDef = {}
-            if(!getSetSymFall(manyPropDefs[propKey])) 
-                getSetSymProps(propDef, manyPropDefs[propKey])
-            else propDef = manyPropDefs[propKey]
+        const outObj = {};
+        for (const [key, prop] of Object.entries(manyPropDefs)) {
+            let propDef = inDeclare(prop);
+            if(propDef !== undefined) propDef = prop;
+            else propDef = utilFlatWrap(prop);
             
-            outObj[utils.capitalize(propKey)] = { [propKey]: propDef }
+            outObj[utilCapitalize(key)] = { [key]: propDef };
         }
-        return outObj
+        return outObj;
     },
     (propName, componentFallbackProps, propValue) => {
-        
-        if(getSetSymFall(propValue))
-            componentFallbackProps[propName] = getSetSymProps(propValue)
-        
+        if(inFallback(propValue))
+            componentFallbackProps[propName] = inDeclare(propValue);
     }
-)
-const [negate] = TypeDefinition("(st)negate", 
+);
+const [Negate] = TypeDefinition("(st)negate", 
     (funcComposable = () => {}, manyPropDefs = {}) => {
-        const outObj = Object.assign({}, funcComposable[COMPOSED])
+        const outObj = Object.assign({}, funcComposable[ST]);
         for (const name in manyPropDefs) 
-            delete outObj[name]
+            delete outObj[name];
         
-        return outObj
+        return outObj;
     }
-)
-const [fallback, getSetSymFall] = TypeDefinition("(st)fallback", 
+);
+const [Fallback, inFallback] = TypeDefinition("(st)fallback", 
     (value) => { 
-        const wrapper = {}
-        getSetSymProps(wrapper, value)
-        getSetSymFall(wrapper, true)
-        return wrapper
+        const wrapper = utilFlatWrap(value);
+        inFallback(wrapper, true);
+        return wrapper;
     }
-)
-const [brand, getSetSymBrand] = TypeDefinition("(st)brand",
+);
+const [Brand, inBrand] = TypeDefinition("(st)brand",
     (validator) => {
-        const wrapper = {}
-        getSetSymProps(wrapper, null)
-        getSetSymBrand(wrapper, validator)
-        return wrapper
+        const wrapper = utilFlatWrap(validator);
+        inBrand(wrapper, true);
+        return wrapper;
     }
-)
-const asBrand = (funcObj, props) => {
+);
+const constructor = (funcObj, props) => {
     for (const key in funcObj) 
-        return getSetSymBrand(getSetSymProps(funcObj[key]))(props)
-}
-const defineProp = (like, metadata) => metadata
+        if(inBrand(funcObj[key]))
+            return inDeclare(funcObj[key])(props);
+};
+const [Legacy, inLegacy] = TypeDefinition("(st)legacy",
+    (like, metadata) => {
+        const wrapper = utilFlatWrap(like);
+        inLegacy(wrapper, metadata);
+        return wrapper;
+    }
+);
+
+// exports
 
 export { 
-    declareProps, 
-    fallback as MOptional, 
-    negate as MHide,
-    brand as MClass,
-    asBrand as MTry,
-    defineProp as MCast,
+    Declare as declareProps, 
+    Fallback as MOptional, 
+    Negate as MHide,
+    Brand as MClass,
+    constructor as MTry,
+    Legacy as MCast,
     fn, 
     TypeDefinition 
+};
+
+// utils
+
+function utilFlatWrap(object) {
+    if(inDeclare(object)) return object;
+
+    const wrapper = {};
+    inDeclare(wrapper, object);
+    return wrapper;
+}
+function utilComposeProps(propObj, symbols) {
+    const entries = [];
+    let props = propObj;
+    if(ST in propObj) 
+        props = propObj[ST];
+    else 
+        for (const key of Object.getOwnPropertySymbols(props))
+            entries.push([key, symbols[key] = props[key]]);
+    
+    for (const key in props) 
+        entries.push([key, symbols[key] = props[key]]);
+        
+    return entries;
+}
+function utilFallbackAssign(target, source) {
+    for (const key in source)
+        if(!(key in target))
+            target[key] = source[key];
+    return target;
+}
+function utilCapitalize(string = "") {
+    const s = string[0].toUpperCase();
+    return `${s}${string.substr(1)}`;
 }

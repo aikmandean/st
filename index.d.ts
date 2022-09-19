@@ -1,7 +1,7 @@
 export function TypeDefinition<
   GCtor extends (...a: any[]) => unknown, 
   GCsum extends (key: symbol, defaults: {[x:symbol]: unknown}, metadata: ReturnType<GCtor>, existing: ReturnType<GCsum>) => unknown
->(description: string, constructor?: GCtor, consumer?: GCsum): [GCtor,(o:any)=>ReturnType<GCtor>&((o:any,v:ReturnType<GCtor>)=>ReturnType<GCtor>)]
+>(description: string, constructor?: GCtor, consumer?: GCsum): [GCtor,((o:any)=>ReturnType<GCtor>)&((o:any,v:ReturnType<GCtor>)=>ReturnType<GCtor>)]
 
 export function fn<
   GDefs extends {}[],
@@ -39,6 +39,7 @@ export function fn<
 
 export function declareProps<T>(manyPropDefs: T): Internals.DeclareProps.Index<T>
 
+export default Internals
 namespace Internals {
   export namespace Fn {
     export type Index<T extends any[]> = { [K in keyof T]: PComposable<T[K]> }[number]
@@ -83,7 +84,6 @@ namespace Internals {
     export type Get<T,K=typeof SV> = T[symbol][typeof S][K]
   }
 }
-export default Internals
 
 type Fallback = Internals.Metadata.New<typeof Internals.Declare.SFallback>
 type Brand<N> = Internals.Metadata.New<typeof Internals.Declare.SBrand, N>
