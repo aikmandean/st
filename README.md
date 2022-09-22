@@ -99,7 +99,8 @@ When we wrote `count: 0`, that became `count: number` to TypeScript.
 This way, by writing passing `Count` to `fn()` vscode knows props 
 has `.count` exactly how you would have written in TypeScript natively.
   
-Here's a full example that you can copy/paste into a file.
+Here's a **full example** that you can copy/paste into a file.  
+> **[Open in playground](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgEwKYGMA2BDKqAKUEYAzgDRwBmAdnAL5VEhwBEAAgBYDuAngEaYAbsgD0JGCwBQk9BGrjEcAGLAo4gHLYQqCgBlsGranpwAvCgw48hYiQAUCSXGdVVh7QC5WLMk5c53VC8WKToASmlZeXgwKGBqGE1tMypqO1jbMwA+RGkXOCiSCExUADpMCABzdKJSUso3RKMwuBEROHE46kqKbFc1eGojP2cRgrkikvKqmttS5GwYVAB5SgAhVRgOFra4QF4NwEq9jphF4HQ4VCgiKC9KAFdqdBhgORQIVBJqAHJ4DmxBYwAEUWK3Wmw40joFBUAySOjg+kCYSAA)**
 ```js
 import { declareProps, fn } from "@hwyblvd/st"
 
@@ -129,6 +130,7 @@ Incredible payoff. Your props object knows the prop types
 you expect, property names - but also - it knows what comments 
 you wrote when declaring a prop.
   
+> **[Open to see comment feature](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgEwKYGMA2BDKqAKUEYAzgDRwBmAdnAL5VEhwBEAAgBYDuAngEaYAbsgD0JGCwBQ09BGrjEcAHLYQqenAC8KDDjyFiJABQJJcc3BEAqK3ADEduADEArjBd44Lkqigk4EJRwMBzA-rJoZhZwtgAqof5hcNhwJBwQ6nxQ2NTIcNSq6nKYPACEcFEWViKV+YUAXKxSdACUMnIKmBAA5ipqWlTURmBEpFoAfIjS0SIi0fNwABIQgr4Bq1BwAOQFalsAdLWzCyfzAD5Hc6fXgrWy8hCYqPtd3cOjJPu7qG2SdBR9H5AA)**
 ```js
 const { Name } = declareProps({
     /** Future users of this code: This is a shoe brand name only! */
@@ -281,9 +283,10 @@ To use it, pass the prop type, then the input data.
 In our example, let's say EvenNumber will accept `props: { anyNumber: number }`, 
 but will only return `{ evenNumber: number }` if our number was even.
   
+> **[Open in playground](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgEwKYGMA2BDKqAKUEYAzgDRwBmAdhQLIAqUAnvQMI4klwC+VRIOACIAAgAsA7swBGmAG7IA9CRhCAUGsWK4AYjwBzYBGpwAyqhgBXMGvTGViOAEFqzAHKWQ01FF5wAvCgYOHiExCQAFAhqcLFw2K4eXj4AXHAADGo8AJQadtQOctiYwMjYMKgAonKoJoE0EWBEpAEAfIgxccCUjc0kAHQJ7p7evgCkcABM2XAwYkQScNSoi5VQRFARAAZuEPCoNdRbuXFwqJgkqHB4VlAmTeGDiSM+WRQuw8lQubb28EjVWpJUZ+QJoLC4Ah9KKdWIHIEvKBpOgcbBcCJFEplCqA6i5HJ5P5wJrAagwXEBKjUXrhNodU75EgQTCofqYCD6Gmkfrw6jAnz4ii4-nfTTaHS1ZAGIzUDRaMwwXDwAASPlQAEIxc5KBUoGoWfBMaUknLtLsJBQSWTcfAtRJjAByeDoKBosRwQA8G4BI-bgWoA6lcwJYSGJUMhZqG4E75hAJNhZKgHb75XY0HBSTAIHBGCwNDAWPS4kbkElKTnmBFhYiKEghiK0gBWXj4uDocroMQRHwbGZIWFwYulwLlyuHEU1+LPL5pSbNrIaK3kw5RM5jxFpQeeZtweUAHgAtAPisat8BuCBcABrMPxbgO3kOtSL3Er3n1uAAFm38sAvBuASr24BUcpgHQM51mgNJmFQch0xgB1uF5ChpEseBgHgOMSGoJ1iTRS5w0zbMmGYIA)**
 ```js
 // After
-let evenNumber
+let validNum
 
 // Now, printEvent 
 // won't crash 🎉 
@@ -291,12 +294,13 @@ let evenNumber
 // code into MTry
 
 try {
-    evenNumber = MTry(EvenNumber, { anyNumber: 5 })
+    validNum = MTry(EvenNumber, { anyNumber: 5 })
 } catch(error) { 
-    evenNumber = MTry(EvenNumber, { anyNumber: 2 })
+    validNum = MTry(EvenNumber, { anyNumber: 2 })
 }
 
-printEvent({ evenNumber }) // <- evenNumber is always even at this point
+printEven({ evenNumber: validNum }) // <- validNum is marked as 'even'
+printEven({ evenNumber: 4 }) // 🚩 static error: yes, it's even, but it wasn't passed to MTry
 ```
   
 When you use a validator, your functions won't throw! Only 
@@ -341,6 +345,7 @@ this practice is called Type Inference. Really, st is just a type inference
 helper. If inference is used well enough, you wouldn't need TypeScript at all. 
   
 Here's a few examples using `fn()`, maybe we can infer what it's doing.
+> **[Open in playground](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgEwKYGMA2BDKqAKUEYAzgDRwBmAdhQLIAqUAnvQMI4klwC+VRIOACIAAgAsA7swBGmAG7IA9CRhCAUGsWK4AYjwBzYBGpwAyqhgBXMGvTGViOADFgUFQDlsIVLzgBeFAwcPEJiEgAKBDU4GKpXDy9UAC5hdR4ASk1tHVRqZAMjag0tMxhceAAJVDwAQiy4AEEqS2p0GEK4GDFseDAoYGoYbglumFQ5avrKePhqRLhgbjBsLlRkTogFmAA6W3te-sGXNxhPb38qanC+sP8APkQNWLg7ahIITFRtzAh9a6JSNtpiczqhMmoeBRjglvOC+gMYNDTolIhk4CVALwbgEq9uAqHrAdBwapEKApADkwJhqDJcBAixIA30GnhRxmoMiKB6qAA8pQAEKuLrkgAMAA4ALQAZmF4oA7ABGGlozE4vHtQnE6DkynI7w0ulcRnMw6ItkopA60EpACscAAVHAACy8dLo7TY3FldVEqAk7VmvULbjUSwgaTVCjUCDwFSHfRAA)**
 ```js
 import { FirstName, LastName } from "./my-types"
 
@@ -533,6 +538,7 @@ There's one specific modifier to help trim type composition.
 Use `MHide()` to opt-out of specific prop types. If your 
 function asks for `label`, but you want to pass a specific value 
 instead of adding it to your dependencies, use `MHide`.
+> **[Open in playground](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgEwKYGMA2BDKqAKUEYAzgDRwBmAdhQLIASwacAvlUSHAEQACAFgHcAngCNMAN2QB6EjG4AoBdOlwAxHgDmwCNTgBlVDACuYBel1zEcAJIkAguhjAJqCgGEIx6jAoAZbFFUTAoAFUFPTGg2OABeFAwcPEJiEgAKBAU4bLhgBycXVAAuKmxMEjcsnItvGBKABjIq7JgIiCioEu5uJpy4HCDMLsVWAEolC2orT1rUKDiqajSwIlI4gD5EaQAqOAA6A7ht6VYPLx9-QOCwto7xlXVUamQtHWolB-0YXHgGOdQAIQfVQAIVQlGgqHMlngoQgmk0mFQMx8cwAjAsaMtViQNtZmv0jP0rpgFtx9PwIKgDGVUCRFH08CYoHodgc9sc4Eo+g8+nzAAVkgHg-uAAJVQAEdjMA8LiyqSADwomBzTYrVJcnmqPl9MDYEgVZBwUTGeADYJwEiU4yYZDUADk8CCAI1OV52uyAB8CW73RIFKdbPlnK4zrMoOMFHCEUileiMrkg4USjAoMY3HAaj4SgAmCitSLQLp4ZDcNijOAPQC8G4BKvYt32c6DgcyInTgIDyJGA1E0PDNmEUylU9koyqg0KmsPhiOR51H2cxSzVa1imyQBKRppJZIpVJpSPpBKZxhZFe27M53NdWvdoolUplbYgVkVs5VcCXuO91-dqAAHuhUDAeAIXmPs9i-G9PQgyC-QDOxHGDdNGGYVA0ljKBLkGUYIyjad0OzeM8gQpM4BTNMKEzOo4FzUjbkLHhi1LMYK1UagICbKAWwoTQIAgQ0YHYnigA)**
 ```js
 // Before
 const ToggleCounter = fn(props => { 
