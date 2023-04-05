@@ -12,7 +12,7 @@ export function fn<
   CAsArgs = { [K in keyof CProps]-?: Exclude<CProps[K], undefined> },
   CAsParams = { [K in keyof CProps]: CProps[K] }
 >(func: GFunc, ...propDefs: GDefs):
-  Extract<keyof CInfos, symbol> extends never ?
+  [Extract<keyof CInfos, symbol>] extends [never] ?
     & Name<CName>
     & ((props: CAsParams) => ReturnType<GFunc>)
   :
@@ -29,7 +29,7 @@ export function fn<
   CAsArgs = { [K in keyof CProps]-?: Exclude<CProps[K], undefined> },
   CAsParams = { [K in keyof CProps]: CProps[K] }
 >(funcName: GName, func: GFunc, ...propDefs: GDefs):
-  Extract<keyof CInfos, symbol> extends never ?
+  [Extract<keyof CInfos, symbol>] extends [never] ?
     & Name<GName>
     & ((props: CAsParams) => ReturnType<GFunc>)
   :
